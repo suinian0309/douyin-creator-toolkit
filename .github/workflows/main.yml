@@ -1,11 +1,13 @@
-```yaml
 name: 构建发布
 
 on:
   push:
-    branches: ["main", "release"]
+    branches:
+      - main
+      - release
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -13,48 +15,39 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # 1. 检出代码
       - name: 检出代码
         uses: actions/checkout@v7
 
-      # 2. 安装 Node.js 22
       - name: 安装 Node.js 22
         uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
 
-      # 3. 安装 pnpm 10
       - name: 安装 pnpm
         run: npm install -g pnpm@10
 
-      # 4. 安装前端依赖
       - name: 安装前端依赖
         run: |
           echo "only-built-dependencies[]=esbuild" >> .npmrc
           pnpm install --frozen-lockfile
 
-      # 5. 安装 Rust
       - name: 安装 Rust 稳定版
         uses: dtolnay/rust-toolchain@stable
 
-      # 6. 缓存 Rust 编译产物
       - name: 缓存 Rust 编译产物
         uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
 
-      # 7. 下载运行时资源
       - name: 下载运行时资源（python-embed / FFmpeg / GPU DLL）
         run: |
           powershell -ExecutionPolicy Bypass -File "./src-tauri/scripts/prepare_runtime.ps1"
         shell: pwsh
 
-      # 8. 构建前端。
       - name: 构建前端
         run: pnpm build
 
-      # 9. 构建 Tauri 安装包并创建 Release
       - name: 构建 Tauri 安装包并创建 Release
         uses: tauri-apps/tauri-action@v1
         env:
@@ -65,4 +58,3 @@ jobs:
           releaseBody: "自动构建 Release"
           releaseDraft: true
           prerelease: false
-```
