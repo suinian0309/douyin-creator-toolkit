@@ -50,7 +50,7 @@ jobs:
           powershell -ExecutionPolicy Bypass -File "./src-tauri/scripts/prepare_runtime.ps1"
         shell: pwsh
 
-      # 8. 构建前端
+      # 8. 构建前端。
       - name: 构建前端
         run: pnpm build
 
