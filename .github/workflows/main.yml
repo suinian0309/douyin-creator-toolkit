@@ -15,16 +15,16 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 安装 Node.js
+      - name: 安装 Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
 
-      - name: 启用 corepack 并安装前端依赖
-        run: |
-          corepack enable
-          corepack pnpm install --frozen-lockfile
+      - name: 安装 pnpm
+        run: npm install -g pnpm
+
+      - name: 安装前端依赖
+        run: pnpm install --frozen-lockfile
 
       - name: 安装 Rust 稳定版
         uses: dtolnay/rust-toolchain@stable
@@ -40,7 +40,7 @@ jobs:
         shell: pwsh
 
       - name: 构建前端
-        run: corepack pnpm build
+        run: pnpm build
 
       - name: 构建 Tauri 安装包并创建 Release
         uses: tauri-apps/tauri-action@v1
