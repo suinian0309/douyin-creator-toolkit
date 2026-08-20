@@ -2,26 +2,29 @@ name: 构建发布
 
 on:
   push:
-    branches: [ "main", "release" ]   # 推送到这些分支时触发
+    branches: [ "main", "release" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:                   # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest            # 本项目仅支持 Windows
+    runs-on: windows-latest
 
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 安装 Node.js 20
+      - name: 安装 Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: 'pnpm'
 
-      - name: 启用 corepack（pnpm）
-        run: corepack enable
+      - name: 启用 corepack 并安装前端依赖
+        run: |
+          corepack enable
+          corepack pnpm install
 
       - name: 安装 Rust 稳定版
         uses: dtolnay/rust-toolchain@stable
@@ -31,5 +34,19 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
-      - name: 安装前端依赖
-        run: corepack
+      - name: 下载运行时资源（python-embed / FFmpeg / GPU DLL）
+        run: powershell -ExecutionPolicy Bypass -File "./src-tauri/scripts/prepare_runtime.ps1"
+        shell: pwsh
+
+      - name: 构建前端
+        run: corepack pnpm build
+
+      - name: 构建 Tauri 安装包
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: '抖音运营工具箱 v__VERSION__
+          releaseDraft: true
+          prerelease: false
