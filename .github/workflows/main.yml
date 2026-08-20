@@ -1,0 +1,35 @@
+name: 构建发布
+
+on:
+  push:
+    branches: [ "main", "release" ]   # 推送到这些分支时触发
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:                   # 允许手动触发
+
+jobs:
+  build:
+    runs-on: windows-latest            # 本项目仅支持 Windows
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 启用 corepack（pnpm）
+        run: corepack enable
+
+      - name: 安装 Rust 稳定版
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 缓存 Rust 编译产物
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: 安装前端依赖
+        run: corepack
