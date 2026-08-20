@@ -24,7 +24,9 @@ jobs:
         run: npm install -g pnpm
 
       - name: 安装前端依赖
-        run: pnpm install --frozen-lockfile
+        run: |
+          echo 'onlyBuiltDependencies=esbuild' >> .npmrc
+          pnpm install --frozen-lockfile
 
       - name: 安装 Rust 稳定版
         uses: dtolnay/rust-toolchain@stable
